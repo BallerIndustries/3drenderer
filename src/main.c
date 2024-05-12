@@ -23,6 +23,13 @@ SDL_Texture* color_buffer_texture = NULL;
 int window_width = 800;
 int window_height = 600;
 
+//int display_mode = 1;
+bool cull_back_faces = true;
+bool draw_vertex_dot = true;
+bool draw_wireframes = true;
+bool draw_filled_triangles = false;
+
+
 void setup(void) {
     // Allocate the required memory in bytes to hold the color buffer
     color_buffer = (uint32_t*) malloc(sizeof(uint32_t) * window_width * window_height);
@@ -39,6 +46,46 @@ void setup(void) {
     load_cube_mesh_data();
 }
 
+void handle_keypress(int key) {
+    switch (key) {
+        case SDLK_ESCAPE:
+            is_running = false;
+            break;
+
+        case SDLK_1:
+            draw_vertex_dot = true;
+            draw_wireframes = true;
+            draw_filled_triangles = false;
+            break;
+
+        case SDLK_2:
+            draw_vertex_dot = false;
+            draw_wireframes = true;
+            draw_filled_triangles = false;
+            break;
+
+        case SDLK_3:
+            draw_vertex_dot = false;
+            draw_wireframes = false;
+            draw_filled_triangles = true;
+            break;
+
+        case SDLK_4:
+            draw_vertex_dot = false;
+            draw_wireframes = true;
+            draw_filled_triangles = true;
+            break;
+
+        case SDLK_c:
+            cull_back_faces = true;
+            break;
+
+        case SDLK_d:
+            cull_back_faces = false;
+            break;
+    }
+}
+
 void process_input(void) {
     SDL_Event event;
     SDL_PollEvent(&event);
@@ -47,9 +94,9 @@ void process_input(void) {
         case SDL_QUIT:
             is_running = false;
             break;
+
         case SDL_KEYDOWN:
-            if (event.key.keysym.sym == SDLK_ESCAPE)
-                is_running = false;
+            handle_keypress(event.key.keysym.sym);
             break;
     }
 }
@@ -103,29 +150,31 @@ void update(void) {
         }
 
         // TODO: Check backface culling
-        vec3_t vector_a = transformed_vertices[0]; /*    A  */
-        vec3_t vector_b = transformed_vertices[1]; /*   / \   */
-        vec3_t vector_c = transformed_vertices[2]; /*  C---B */
+        if (cull_back_faces) {
+            vec3_t vector_a = transformed_vertices[0]; /*    A    */
+            vec3_t vector_b = transformed_vertices[1]; /*   / \   */
+            vec3_t vector_c = transformed_vertices[2]; /*  C---B  */
 
-        // Get the vector subtraction of B-A and C-A
-        vec3_t vector_ab = vec3_sub(vector_b, vector_a);
-        vec3_t vector_ac = vec3_sub(vector_c, vector_a);
+            // Get the vector subtraction of B-A and C-A
+            vec3_t vector_ab = vec3_sub(vector_b, vector_a);
+            vec3_t vector_ac = vec3_sub(vector_c, vector_a);
 
-        // Compute the face normal (using the cross product to find perpendicular)
-        vec3_t normal =  vec3_cross(vector_ab, vector_ac);
+            // Compute the face normal (using the cross product to find perpendicular)
+            vec3_t normal =  vec3_cross(vector_ab, vector_ac);
 
-        // Normalize the face normal vector
-        vec3_normalize(&normal);
+            // Normalize the face normal vector
+            vec3_normalize(&normal);
 
-        // Find the vector between a point in the triangle and the camera origin
-        vec3_t camera_ray = vec3_sub(camera_position, vector_a);
+            // Find the vector between a point in the triangle and the camera origin
+            vec3_t camera_ray = vec3_sub(camera_position, vector_a);
 
-        // Calculate how aligned the camera ray is with the face normal (using dot product)
-        float dot_normal_camera = vec3_dot(normal, camera_ray);
-        //printf("dot_normal_camera = %f\n", dot_normal_camera);
+            // Calculate how aligned the camera ray is with the face normal (using dot product)
+            float dot_normal_camera = vec3_dot(normal, camera_ray);
+            //printf("dot_normal_camera = %f\n", dot_normal_camera);
 
-        if (dot_normal_camera < 0) {
-            continue;
+            if (dot_normal_camera < 0) {
+                continue;
+            }
         }
 
         triangle_t projected_triangle;
@@ -153,21 +202,27 @@ void render(void) {
     for (int i = 0; i < num_triangles; i++) {
         triangle_t triangle = triangles_to_render[i];
 
-        // draw vertex points
-        // draw_rectangle(triangle.points[0].x, triangle.points[0].y, 3, 3, 0xFFFFFF00);
-        // draw_rectangle(triangle.points[1].x, triangle.points[1].y, 3, 3, 0xFFFFFF00);
-        // draw_rectangle(triangle.points[2].x, triangle.points[2].y, 3, 3, 0xFFFFFF00);
-
-        // draw unfilled face
-        draw_triangle(
-            triangle.points[0].x,
-            triangle.points[0].y,
-            triangle.points[1].x,
-            triangle.points[1].y,
-            triangle.points[2].x,
-            triangle.points[2].y,
-            0xFF00FF00
-        );
+        if (draw_vertex_dot) {
+            draw_rectangle(triangle.points[0].x, triangle.points[0].y, 5, 5, 0xFFFF0000);
+            draw_rectangle(triangle.points[1].x, triangle.points[1].y, 5, 5, 0xFFFF0000);
+            draw_rectangle(triangle.points[2].x, triangle.points[2].y, 5, 5, 0xFFFF0000);
+        }
+        if (draw_filled_triangles) {
+            draw_filled_triangle(
+                triangle.points[0].x, triangle.points[0].y,
+                triangle.points[1].x, triangle.points[1].y,
+                triangle.points[2].x, triangle.points[2].y,
+                0xFFFFFFFF
+            );
+        }
+        if (draw_wireframes) {
+            draw_triangle(
+                triangle.points[0].x, triangle.points[0].y,
+                triangle.points[1].x, triangle.points[1].y,
+                triangle.points[2].x, triangle.points[2].y,
+                0xFF00FF00
+            );
+        }
     }
     
     render_color_buffer();
