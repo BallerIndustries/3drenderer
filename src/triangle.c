@@ -1,10 +1,19 @@
 #include "triangle.h"
 #include "display.h"
 
+
 void int_swap(int* a, int* b) {
     int tmp = *a;
     *a = *b;
     *b = tmp;
+}
+
+void swap(void* a, void* b, size_t length) {
+    void *temp = malloc(length);
+    memcpy(temp, b, length);
+    memcpy(b, a, length);
+    memcpy(a, temp, length);
+    free(temp);
 }
 
 void fill_flat_bottom_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color) {

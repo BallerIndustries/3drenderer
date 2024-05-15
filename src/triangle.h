@@ -4,6 +4,7 @@
 #include "stdint.h"
 #include "vector.h"
 #include "stdint.h"
+#include "stdio.h"
 
 typedef struct {
     int a;
@@ -15,8 +16,10 @@ typedef struct {
 typedef struct {
     vec2_t points[3];
     uint32_t color;
+    float avg_depth;
 } triangle_t;
 
 void draw_filled_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color);
+void swap(void* a, void* b, size_t length);
 
 #endif
