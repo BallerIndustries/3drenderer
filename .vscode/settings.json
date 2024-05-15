@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "triangle.h": "c"
+        "triangle.h": "c",
+        "stdlib.h": "c"
     }
 }
