@@ -8,6 +8,8 @@
 #include "array.h"
 #include "matrix.h"
 #include "light.h"
+#include "texture.h"
+#include "triangle.h"
  
 triangle_t* triangles_to_render = NULL;
 vec3_t camera_position = { .x = 0, .y = 0, .z = 0 };
@@ -46,8 +48,14 @@ void setup(void) {
     float znear = 0.1;
     float zfar = 100.0;
     proj_matrix = mat4_make_perspective(fov, aspect, znear, zfar);
-    //load_cube_mesh_data();
-    load_obj_file_data();
+    
+    // Manually load the hardcoded texture date from the static array
+    mesh_texture = (uint32_t*)REDBRICK_TEXTURE;
+    texture_width = 64;
+    texture_height = 64;
+
+    load_cube_mesh_data();
+    // load_obj_file_data();
 }
 
 void handle_keypress(int key) {
@@ -211,6 +219,11 @@ void update(void) {
                 { projected_points[0].x, projected_points[0].y, },
                 { projected_points[1].x, projected_points[1].y, },
                 { projected_points[2].x, projected_points[2].y, },
+            },
+            .texcoords = {
+                { mesh_face.a_uv.u, mesh_face.a_uv.v },
+                { mesh_face.b_uv.u, mesh_face.b_uv.v },
+                { mesh_face.c_uv.u, mesh_face.c_uv.v }
             },
             .color = lighted_color,
             .avg_depth = avg_depth
