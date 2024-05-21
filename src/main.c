@@ -24,10 +24,8 @@ SDL_Texture* color_buffer_texture = NULL;
 int window_width = 800;
 int window_height = 600;
 
-bool cull_back_faces = true;
-bool draw_vertex_dot = true;
-bool draw_wireframes = true;
-bool draw_filled_triangles = false;
+enum cull_method cull_method;
+enum render_method render_method;
 
 void setup(void) {
     // Allocate the required memory in bytes to hold the color buffer
@@ -59,35 +57,35 @@ void handle_keypress(int key) {
             break;
 
         case SDLK_1:
-            draw_vertex_dot = true;
-            draw_wireframes = true;
-            draw_filled_triangles = false;
+            render_method = RENDER_WIRE;
             break;
 
         case SDLK_2:
-            draw_vertex_dot = false;
-            draw_wireframes = true;
-            draw_filled_triangles = false;
+            render_method = RENDER_WIRE_VERTEX;
             break;
 
         case SDLK_3:
-            draw_vertex_dot = false;
-            draw_wireframes = false;
-            draw_filled_triangles = true;
+            render_method = RENDER_FILL_TRIANGLE;
             break;
 
         case SDLK_4:
-            draw_vertex_dot = false;
-            draw_wireframes = true;
-            draw_filled_triangles = true;
+            render_method = RENDER_FILL_TRIANGLE_WIRE;
+            break;
+
+        case SDLK_5:
+            render_method = RENDER_TEXTURED;
+            break;
+            
+        case SDLK_6:
+            render_method = RENDER_TEXTURED_WIRE;
             break;
 
         case SDLK_c:
-            cull_back_faces = true;
+            cull_method = CULL_NONE;
             break;
 
         case SDLK_d:
-            cull_back_faces = false;
+            cull_method = CULL_BACKFACE;
             break;
     }
 }
@@ -182,7 +180,7 @@ void update(void) {
         float dot_normal_camera = vec3_dot(normal, camera_ray);
         float dot_normal_light_source = vec3_dot(normal, light.direction);
 
-        if (cull_back_faces && dot_normal_camera < 0) {
+        if (cull_method == CULL_BACKFACE && dot_normal_camera < 0) {
             continue;
         }
 
@@ -196,6 +194,9 @@ void update(void) {
             // Scale into the view port
             projected_points[j].x *= (window_width / 2.0);
             projected_points[j].y *= (window_height / 2.0);
+
+            // Invert the y values to account for flipped screen y cooridnate
+            projected_points[j].y *= -1;
 
             // Translate the projected points to the middle of the screen
             projected_points[j].x += (window_width / 2.0);
@@ -240,12 +241,27 @@ void render(void) {
     for (int i = 0; i < num_triangles; i++) {
         triangle_t triangle = triangles_to_render[i];
 
-        if (draw_vertex_dot) {
+        if (render_method == RENDER_WIRE) {
+            draw_triangle(
+                triangle.points[0].x, triangle.points[0].y,
+                triangle.points[1].x, triangle.points[1].y,
+                triangle.points[2].x, triangle.points[2].y,
+                0xFF00FF00
+            );
+        }
+        else if (render_method == RENDER_WIRE_VERTEX) {
+            draw_triangle(
+                triangle.points[0].x, triangle.points[0].y,
+                triangle.points[1].x, triangle.points[1].y,
+                triangle.points[2].x, triangle.points[2].y,
+                0xFF00FF00
+            );
+
             draw_rectangle(triangle.points[0].x, triangle.points[0].y, 5, 5, 0xFFFF0000);
             draw_rectangle(triangle.points[1].x, triangle.points[1].y, 5, 5, 0xFFFF0000);
             draw_rectangle(triangle.points[2].x, triangle.points[2].y, 5, 5, 0xFFFF0000);
         }
-        if (draw_filled_triangles) {
+        else if (render_method == RENDER_FILL_TRIANGLE) {
             draw_filled_triangle(
                 triangle.points[0].x, triangle.points[0].y,
                 triangle.points[1].x, triangle.points[1].y,
@@ -253,13 +269,26 @@ void render(void) {
                 triangle.color
             );
         }
-        if (draw_wireframes) {
+        else if (render_method == RENDER_FILL_TRIANGLE_WIRE) {
+            draw_filled_triangle(
+                triangle.points[0].x, triangle.points[0].y,
+                triangle.points[1].x, triangle.points[1].y,
+                triangle.points[2].x, triangle.points[2].y,
+                triangle.color
+            );
+            
             draw_triangle(
                 triangle.points[0].x, triangle.points[0].y,
                 triangle.points[1].x, triangle.points[1].y,
                 triangle.points[2].x, triangle.points[2].y,
                 0xFF00FF00
             );
+        }
+        else if (render_method == RENDER_TEXTURED) {
+
+        }
+        else if (render_method == RENDER_TEXTURED_WIRE) {
+
         }
     }
     

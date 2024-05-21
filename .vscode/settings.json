@@ -28,6 +28,11 @@
         "utility": "c",
         "variant": "c",
         "vector": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "stdbool.h": "c",
+        "sdl.h": "c",
+        "display.h": "c",
+        "vector.h": "c",
+        "mesh.h": "c"
     }
 }
