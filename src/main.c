@@ -7,9 +7,11 @@
 #include "mesh.h"
 #include "array.h"
 #include "matrix.h"
+#include "light.h"
  
 triangle_t* triangles_to_render = NULL;
 vec3_t camera_position = { .x = 0, .y = 0, .z = 0 };
+light_t light = { .direction = { .x = 0.0, .y = 0.0, .z = -1.0 }};
 mat4_t proj_matrix;
 
 bool is_running = false;
@@ -26,7 +28,6 @@ bool cull_back_faces = true;
 bool draw_vertex_dot = true;
 bool draw_wireframes = true;
 bool draw_filled_triangles = false;
-
 
 void setup(void) {
     // Allocate the required memory in bytes to hold the color buffer
@@ -47,7 +48,8 @@ void setup(void) {
     float znear = 0.1;
     float zfar = 100.0;
     proj_matrix = mat4_make_perspective(fov, aspect, znear, zfar);
-    load_cube_mesh_data();
+    //load_cube_mesh_data();
+    load_obj_file_data();
 }
 
 void handle_keypress(int key) {
@@ -113,7 +115,7 @@ void update(void) {
     triangles_to_render = NULL;
 
     // Change the scale/rotation values per animation frame
-    mesh.rotation.x += 0.01;
+    mesh.rotation.x += 0.001;
     // mesh.rotation.y += 0.01;
     // mesh.rotation.z += 0.01;
 
@@ -158,32 +160,30 @@ void update(void) {
             transformed_vertices[j] = transformed_vertex;
         }
 
-        // TODO: Check backface culling
-        if (cull_back_faces) {
-            vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]); /*    A    */
-            vec3_t vector_b = vec3_from_vec4(transformed_vertices[1]); /*   / \   */
-            vec3_t vector_c = vec3_from_vec4(transformed_vertices[2]); /*  C---B  */
+        
+        vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]); /*    A    */
+        vec3_t vector_b = vec3_from_vec4(transformed_vertices[1]); /*   / \   */
+        vec3_t vector_c = vec3_from_vec4(transformed_vertices[2]); /*  C---B  */
 
-            // Get the vector subtraction of B-A and C-A
-            vec3_t vector_ab = vec3_sub(vector_b, vector_a);
-            vec3_t vector_ac = vec3_sub(vector_c, vector_a);
+        // Get the vector subtraction of B-A and C-A
+        vec3_t vector_ab = vec3_sub(vector_b, vector_a);
+        vec3_t vector_ac = vec3_sub(vector_c, vector_a);
 
-            // Compute the face normal (using the cross product to find perpendicular)
-            vec3_t normal =  vec3_cross(vector_ab, vector_ac);
+        // Compute the face normal (using the cross product to find perpendicular)
+        vec3_t normal =  vec3_cross(vector_ab, vector_ac);
 
-            // Normalize the face normal vector
-            vec3_normalize(&normal);
+        // Normalize the face normal vector
+        vec3_normalize(&normal);
 
-            // Find the vector between a point in the triangle and the camera origin
-            vec3_t camera_ray = vec3_sub(camera_position, vector_a);
+        // Find the vector between a point in the triangle and the camera origin
+        vec3_t camera_ray = vec3_sub(camera_position, vector_a);
 
-            // Calculate how aligned the camera ray is with the face normal (using dot product)
-            float dot_normal_camera = vec3_dot(normal, camera_ray);
-            //printf("dot_normal_camera = %f\n", dot_normal_camera);
+        // Calculate how aligned the camera ray is with the face normal (using dot product)
+        float dot_normal_camera = vec3_dot(normal, camera_ray);
+        float dot_normal_light_source = vec3_dot(normal, light.direction);
 
-            if (dot_normal_camera < 0) {
-                continue;
-            }
+        if (cull_back_faces && dot_normal_camera < 0) {
+            continue;
         }
 
         vec4_t projected_points[3];
@@ -203,6 +203,7 @@ void update(void) {
         }
 
         float avg_depth = (transformed_vertices[0].z + transformed_vertices[1].z + transformed_vertices[2].z) / 3.0;
+        uint32_t lighted_color = light_apply_intensity(mesh_face.color, dot_normal_light_source);
 
         triangle_t projected_triangle = {
             .points = {
@@ -210,7 +211,7 @@ void update(void) {
                 { projected_points[1].x, projected_points[1].y, },
                 { projected_points[2].x, projected_points[2].y, },
             },
-            .color = mesh_face.color,
+            .color = lighted_color,
             .avg_depth = avg_depth
         };
 
@@ -272,7 +273,6 @@ void free_resources() {
     array_free(mesh.faces);
     array_free(mesh.vertices);
     array_free(triangles_to_render);
-    
 }
 
 int main(void) {

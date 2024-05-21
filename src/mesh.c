@@ -90,7 +90,7 @@ void load_obj_file_data(void) {
             int b;
             int c;
             sscanf(line, "%*s %i/%*i/%*i %i/%*i/%*i %i/%*i/%*i", &a, &b, &c);
-            face_t cube_face = { a, b, c };
+            face_t cube_face = { a, b, c, .color = 0xFFFFFFFF };
             array_push(mesh.faces, cube_face);
         }
     }
