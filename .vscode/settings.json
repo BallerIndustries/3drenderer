@@ -33,6 +33,8 @@
         "sdl.h": "c",
         "display.h": "c",
         "vector.h": "c",
-        "mesh.h": "c"
+        "mesh.h": "c",
+        "swap.h": "c",
+        "stdint.h": "c"
     }
 }
