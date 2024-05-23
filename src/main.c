@@ -12,7 +12,11 @@
 #include "triangle.h"
 #include "upng.h"
  
-triangle_t* triangles_to_render = NULL;
+//triangle_t* triangles_to_render = NULL;
+#define MAX_TRIANGLES_PER_MESH 10000
+triangle_t triangles_to_render[MAX_TRIANGLES_PER_MESH];
+int num_triangles = 0;
+
 vec3_t camera_position = { .x = 0, .y = 0, .z = 0 };
 light_t light = { .direction = { .x = 0.0, .y = 0.0, .z = -1.0 }};
 mat4_t proj_matrix;
@@ -45,10 +49,10 @@ void setup(void) {
     proj_matrix = mat4_make_perspective(fov, aspect, znear, zfar);
 
     //load_cube_mesh_data();
-    load_obj_file_data("./assets/f117.obj");
+    load_obj_file_data("./assets/f22.obj");
 
     // Load the texture information from an external PNG file
-    load_png_texture_data("./assets/f117.png");
+    load_png_texture_data("./assets/f22.png");
 }
 
 void handle_keypress(int key) {
@@ -111,7 +115,8 @@ void update(void) {
 
     previous_frame_time = SDL_GetTicks();
 
-    triangles_to_render = NULL;
+    //triangles_to_render = NULL;
+    num_triangles = 0;
 
     // Change the scale/rotation values per animation frame
     mesh.rotation.x += 0.01;
@@ -222,7 +227,10 @@ void update(void) {
             .avg_depth = avg_depth
         };
 
-        array_push(triangles_to_render, projected_triangle);
+        //array_push(triangles_to_render, projected_triangle);
+        if (num_triangles < MAX_TRIANGLES_PER_MESH) {
+            triangles_to_render[num_triangles++] = projected_triangle;
+        }
     }
 
     // TODO: Sort the triangles to render by their average depth
@@ -242,7 +250,7 @@ void update(void) {
 void render(void) {
     draw_grid();
 
-    int num_triangles = array_length(triangles_to_render);
+    //int num_triangles = array_length(triangles_to_render);
 
     for (int i = 0; i < num_triangles; i++) {
         triangle_t triangle = triangles_to_render[i];
@@ -315,7 +323,6 @@ void render(void) {
         }
     }
 
-    array_free(triangles_to_render);
     render_color_buffer();
     clear_z_buffer();
     clear_color_buffer(0xFF000000);
