@@ -75,13 +75,11 @@ void load_obj_file_data(char* filename) {
         
         // Texture coordinate information
         if (strcmp(str, "vt") == 0) {
-            printf("Found a vertex texture\n");
             tex2_t texcoord;
             sscanf(line, "vt %f %f", &texcoord.u, &texcoord.v);
             array_push(tex_coords, texcoord);
         }
         else if (strcmp(str, "v") == 0) {
-            printf("Found a vertex\n");
             float x;
             float y;
             float z;
@@ -91,7 +89,6 @@ void load_obj_file_data(char* filename) {
             array_push(mesh.vertices, cube_vertex);
         }
         else if (strcmp(str, "f") == 0) {
-            printf("Found a face\n");
             int vertex_indices[3];
             int texture_indices[3];
             int normal_indices[3];

@@ -119,7 +119,16 @@ void draw_texel(
 
     int tex_x = abs((int)(interpolated_u * texture_width)) % texture_width;
     int tex_y = abs((int)(interpolated_v * texture_height)) % texture_height;
-    draw_pixel(x, y, texture[tex_y * texture_width + tex_x]);
+
+    // Adjust 1/w so that pixels that are closer have smaller values
+    interpolated_reciprocal_w = 1 - interpolated_reciprocal_w;
+
+    if (interpolated_reciprocal_w < z_buffer[(window_width * y) + x]) {
+        draw_pixel(x, y, texture[tex_y * texture_width + tex_x]);
+
+        // Update z_buffer with the 1/w of this current pixel
+        z_buffer[(window_width * y) + x] = interpolated_reciprocal_w;
+    }
 }
 
 void draw_textured_triangle(

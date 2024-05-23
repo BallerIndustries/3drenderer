@@ -20,19 +20,13 @@ mat4_t proj_matrix;
 bool is_running = false;
 int previous_frame_time = 0;
 
-SDL_Window* window = NULL;
-SDL_Renderer* renderer = NULL;
-uint32_t* color_buffer = NULL;
-SDL_Texture* color_buffer_texture = NULL;
-int window_width = 800;
-int window_height = 600;
-
 enum cull_method cull_method = CULL_BACKFACE;
 enum render_method render_method = RENDER_FILL_TRIANGLE;
 
 void setup(void) {
     // Allocate the required memory in bytes to hold the color buffer
-    color_buffer = (uint32_t*) malloc(sizeof(uint32_t) * window_width * window_height);
+    color_buffer = (uint32_t*)malloc(sizeof(uint32_t) * window_width * window_height);
+    z_buffer = (float*)malloc(sizeof(float) * window_width * window_height);
 
     // Creating a SDL texture that is used to display the color buffer
     color_buffer_texture = SDL_CreateTexture(
@@ -320,18 +314,21 @@ void render(void) {
             );
         }
     }
-    
+
+    array_free(triangles_to_render);
     render_color_buffer();
+    clear_z_buffer();
     clear_color_buffer(0xFF000000);
     SDL_RenderPresent(renderer);
 }
 
 void free_resources() {
-    free(color_buffer);
-    upng_free(png_texture);
-    array_free(mesh.faces);
-    array_free(mesh.vertices);
-    array_free(triangles_to_render);
+    // free(color_buffer);
+    // free(z_buffer);
+    // upng_free(png_texture);
+    // array_free(mesh.faces);
+    // array_free(mesh.vertices);
+    // array_free(triangles_to_render);
 }
 
 int main(void) {
