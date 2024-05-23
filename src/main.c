@@ -27,8 +27,8 @@ SDL_Texture* color_buffer_texture = NULL;
 int window_width = 800;
 int window_height = 600;
 
-enum cull_method cull_method;
-enum render_method render_method;
+enum cull_method cull_method = CULL_BACKFACE;
+enum render_method render_method = RENDER_FILL_TRIANGLE;
 
 void setup(void) {
     // Allocate the required memory in bytes to hold the color buffer
@@ -50,10 +50,11 @@ void setup(void) {
     float zfar = 100.0;
     proj_matrix = mat4_make_perspective(fov, aspect, znear, zfar);
 
-    load_cube_mesh_data();
-    // load_obj_file_data();
+    //load_cube_mesh_data();
+    load_obj_file_data("./assets/f117.obj");
 
-    load_png_texture_data("./assets/cube.png");
+    // Load the texture information from an external PNG file
+    load_png_texture_data("./assets/f117.png");
 }
 
 void handle_keypress(int key) {
@@ -120,8 +121,8 @@ void update(void) {
 
     // Change the scale/rotation values per animation frame
     mesh.rotation.x += 0.01;
-    mesh.rotation.y += 0.01;
-    mesh.rotation.z += 0.01;
+    // mesh.rotation.y += 0.01;
+    //mesh.rotation.z += 0.01;
 
     //mesh.translation.x += 0.01;
     mesh.translation.z = 5.0;
@@ -139,9 +140,9 @@ void update(void) {
         face_t mesh_face = mesh.faces[i];
 
         vec3_t face_vertices[3];
-        face_vertices[0] = mesh.vertices[mesh_face.a - 1];
-        face_vertices[1] = mesh.vertices[mesh_face.b - 1];
-        face_vertices[2] = mesh.vertices[mesh_face.c - 1];
+        face_vertices[0] = mesh.vertices[mesh_face.a];
+        face_vertices[1] = mesh.vertices[mesh_face.b];
+        face_vertices[2] = mesh.vertices[mesh_face.c];
 
         vec4_t transformed_vertices[3];
 

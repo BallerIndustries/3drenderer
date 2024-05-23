@@ -62,6 +62,8 @@ void load_obj_file_data(char* filename) {
     size_t len = 0;
     ssize_t read;
 
+    tex2_t* tex_coords = NULL;
+
     if (file == NULL) {
         fprintf(stderr, "Failed to open file");
         exit(EXIT_FAILURE);
@@ -70,8 +72,16 @@ void load_obj_file_data(char* filename) {
     while ((read = getline(&line, &len, file)) != -1) {
         char str[20];
         sscanf(line, "%s", str);
-
-        if (strcmp(str, "v") == 0) {
+        
+        // Texture coordinate information
+        if (strcmp(str, "vt") == 0) {
+            printf("Found a vertex texture\n");
+            tex2_t texcoord;
+            sscanf(line, "vt %f %f", &texcoord.u, &texcoord.v);
+            array_push(tex_coords, texcoord);
+        }
+        else if (strcmp(str, "v") == 0) {
+            printf("Found a vertex\n");
             float x;
             float y;
             float z;
@@ -81,16 +91,31 @@ void load_obj_file_data(char* filename) {
             array_push(mesh.vertices, cube_vertex);
         }
         else if (strcmp(str, "f") == 0) {
-            int a;
-            int b;
-            int c;
-            sscanf(line, "%*s %i/%*i/%*i %i/%*i/%*i %i/%*i/%*i", &a, &b, &c);
-            face_t cube_face = { a, b, c, .color = 0xFFFFFFFF };
-            array_push(mesh.faces, cube_face);
+            printf("Found a face\n");
+            int vertex_indices[3];
+            int texture_indices[3];
+            int normal_indices[3];
+
+            sscanf(line, "%*s %d/%d/%d %d/%d/%d %d/%d/%d", 
+                &vertex_indices[0], &texture_indices[0], &normal_indices[0],
+                &vertex_indices[1], &texture_indices[1], &normal_indices[1],
+                &vertex_indices[2], &texture_indices[2], &normal_indices[2]
+            );
+            face_t face = { 
+                .a = vertex_indices[0] - 1, 
+                .b = vertex_indices[1] - 1, 
+                .c = vertex_indices[2] - 1, 
+                .a_uv = tex_coords[texture_indices[0] - 1],
+                .b_uv = tex_coords[texture_indices[1] - 1],
+                .c_uv = tex_coords[texture_indices[2] - 1],
+                .color = 0xFFFFFFFF 
+            };
+            array_push(mesh.faces, face);
         }
     }
 
     fclose(file);
+    array_free(tex_coords);
 
     if (line) {
         free(line);
