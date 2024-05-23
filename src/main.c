@@ -10,6 +10,7 @@
 #include "light.h"
 #include "texture.h"
 #include "triangle.h"
+#include "upng.h"
  
 triangle_t* triangles_to_render = NULL;
 vec3_t camera_position = { .x = 0, .y = 0, .z = 0 };
@@ -36,7 +37,7 @@ void setup(void) {
     // Creating a SDL texture that is used to display the color buffer
     color_buffer_texture = SDL_CreateTexture(
         renderer,
-        SDL_PIXELFORMAT_ARGB8888,
+        SDL_PIXELFORMAT_RGBA32,
         SDL_TEXTUREACCESS_STREAMING,
         window_width,
         window_height
@@ -48,14 +49,11 @@ void setup(void) {
     float znear = 0.1;
     float zfar = 100.0;
     proj_matrix = mat4_make_perspective(fov, aspect, znear, zfar);
-    
-    // Manually load the hardcoded texture date from the static array
-    mesh_texture = (uint32_t*)REDBRICK_TEXTURE;
-    texture_width = 64;
-    texture_height = 64;
 
     load_cube_mesh_data();
     // load_obj_file_data();
+
+    load_png_texture_data("./assets/cube.png");
 }
 
 void handle_keypress(int key) {
@@ -121,9 +119,9 @@ void update(void) {
     triangles_to_render = NULL;
 
     // Change the scale/rotation values per animation frame
-    // mesh.rotation.x += 0.01;
-    // mesh.rotation.y += 0.01;
-    // mesh.rotation.z += 0.01;
+    mesh.rotation.x += 0.01;
+    mesh.rotation.y += 0.01;
+    mesh.rotation.z += 0.01;
 
     //mesh.translation.x += 0.01;
     mesh.translation.z = 5.0;
@@ -329,6 +327,7 @@ void render(void) {
 
 void free_resources() {
     free(color_buffer);
+    upng_free(png_texture);
     array_free(mesh.faces);
     array_free(mesh.vertices);
     array_free(triangles_to_render);
@@ -346,6 +345,7 @@ int main(void) {
     }
 
     destroy_window();
+    free_resources();
 
     return 0;
 }

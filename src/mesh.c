@@ -56,8 +56,8 @@ void load_cube_mesh_data(void) {
     }
 }
 
-void load_obj_file_data(void) {
-    FILE* file = fopen("assets/f22.obj", "r");
+void load_obj_file_data(char* filename) {
+    FILE* file = fopen(filename, "r");
     char * line = NULL;
     size_t len = 0;
     ssize_t read;

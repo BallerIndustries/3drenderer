@@ -6,6 +6,7 @@
 #include "stdint.h"
 #include "stdio.h"
 #include "texture.h"
+#include "upng.h"
 
 typedef struct {
     int a;
@@ -41,5 +42,7 @@ void draw_texel(
 );
 
 vec3_t barycentric_weights(vec2_t a, vec2_t b, vec2_t c, vec2_t p);
+
+void load_png_texture_data(char* filename);
 
 #endif
